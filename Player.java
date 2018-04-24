@@ -5,6 +5,7 @@ import java.lang.InterruptedException;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.imageio.ImageIO;
+import java.awt.Color;
 
 public class Player {
 
@@ -27,7 +28,7 @@ public class Player {
 
     piCamera.setWidth(1640);
     piCamera.setHeight(1232);
-    piCamera.setTimeout(2);
+    piCamera.setTimeout(5);
     piCamera.turnOffPreview();
     piCamera.setVerticalFlipOn();
     piCamera.setHorizontalFlipOn();
@@ -38,10 +39,19 @@ public class Player {
     catch(IOException | InterruptedException e) {
       e.printStackTrace();
     }
-    image = image.getSubimage(535, 300, 655, 700);
+    image = image.getSubimage(558, 333, 651, 700);
+    drawGridOnImage();
     writeImageFile();
 
     System.out.println("Grejer");
+  }
+
+  public static void drawGridOnImage() {
+    for(float y = 20; y < 690; y += 36.6) {
+      for(int x = 18; x < 640; x += 34 ) {
+        image.setRGB(x, (int)y, Color.green.getRGB());
+      }
+    }
   }
 
   public static void writeImageFile() {
