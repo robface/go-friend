@@ -24,6 +24,8 @@ public class Player {
   public static int[] modX = {-1, +1, 0, 0};
   public static int[] modY = {0, 0, -1, +1};
 
+  public static char[] letters = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'};
+
   public Player() {
 
   }
@@ -55,18 +57,24 @@ public class Player {
       e.printStackTrace();
     }
 
-    image = image.getSubimage(558, 334, 651, 700);
-    referenceImage = referenceImage.getSubimage(558, 334, 651, 700);
+    image = image.getSubimage(563, 329, 651, 700);
+    referenceImage = referenceImage.getSubimage(563, 329, 651, 700);
 
     // Uncomment for visual of grid:
     // -----------------------------
-    drawGridOnImage();
-    writeImageFile();
+    // drawGridOnImage();
+    // writeImageFile();
     // -----------------------------
+    
+    piCamera.setTimeout(1200);
 
-    // speak("Ok. Let's play");
+    speak("K-14");
+
+
 
   }
+
+
 
   public static void findAndRemoveCaptures(int x, int y, char col) {
     for(int t = 0; t < 4; t++) {
@@ -150,7 +158,7 @@ public class Player {
       String[] args = {"flite", "-voice", "slt", "-t", "\"" + whatToSay + "\""};
       Process p = Runtime.getRuntime().exec(args);
       p.waitFor();
-      p.destroy();
+      p.destroyForcibly();
     }
     catch(Exception e) {
       e.printStackTrace();
@@ -158,16 +166,63 @@ public class Player {
     }
   }
 
+  public static String findNewMove() {
+    int[] xx = {-4, 4, -4, 4};
+    int[] yy = {-4, -4, 4, 4};
+    int pixelColor;
+    int red;
+    int green;
+    int blue;
+    int referenceColor;
+    int refRed;
+    int refGreen;
+    int refBlue;
+    int xCoordinate = 0;
+    int yCoordinate = 0;
+    for(float y = 20; y < 690; y += 36.6) {
+      xCoordinate = 0;
+      for(float x = 18; x < 640; x += 34 ) {
+	for(int t = 0; t < 4; t++) {
+          pixelColor = image.getRGB((int)(x + xx[t]), (int)(y + yy[t]));
+	  blue = pixelColor & 0xff;
+	  green = (pixelColor & 0xff00) >> 8;
+	  red = (pixelColor & 0xff0000) >> 16;
+          referenceColor = referenceImage.getRGB((int)(x + xx[t]), (int)(y + yy[t]));
+	  refBlue = referenceColor & 0xff;
+	  refGreen = (referenceColor & 0xff00) >> 8;
+	  refRed = (referenceColor & 0xff0000) >> 16;
+	  if(blue >= refBlue - 5 && blue <= refBlue + 5) {
+	    if(red >= refRed - 5 && red <= refRed + 5) {
+	      if(green >= refGreen - 5 && green <= refGreen + 5) {
+		referenceImage.setRGB((int)(x + xx[t]), (int)(y + yy[t]), image.getRGB((int)(x + xx[t]), (int)(y + yy[t])));
+	      }
+	    }
+	  }
+	  if(red > refRed + 5 && green > refGreen + 15 && blue > refBlue + 20) {
+            return "W:" + letters[xCoordinate] + ":" + Integer.toString(yCoordinate + 1);
+	  }
+	  if(red < refRed - 15 && green < refGreen - 15 && blue < refBlue - 15) {
+            return "B:" + letters[xCoordinate] + ":" + Integer.toString(yCoordinate + 1);
+	  }
+	}
+	xCoordinate++;
+      }
+      yCoordinate++;
+    }
+    return "";
+  }
+
   public static void drawGridOnImage() {
     for(float y = 20; y < 690; y += 36.6) {
-      for(int x = 18; x < 640; x += 34 ) {
-        image.setRGB(x, (int)y, Color.green.getRGB());
-        image.setRGB(x - 4, (int)y - 4, Color.red.getRGB());
-        image.setRGB(x + 4, (int)y - 4, Color.red.getRGB());
-        image.setRGB(x - 4, (int)y + 4, Color.red.getRGB());
-        image.setRGB(x + 4, (int)y + 4, Color.red.getRGB());
+      for(float x = 18; x < 640; x += 34 ) {
+        image.setRGB((int)x, (int)y, Color.green.getRGB());
+        image.setRGB((int)(x - 4), (int)(y - 4), Color.red.getRGB());
+        image.setRGB((int)(x + 4), (int)(y - 4), Color.red.getRGB());
+        image.setRGB((int)(x - 4), (int)(y + 4), Color.red.getRGB());
+        image.setRGB((int)(x + 4), (int)(y + 4), Color.red.getRGB());
       }
     }
+
   }
 
   public static void writeImageFile() {
