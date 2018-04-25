@@ -17,8 +17,12 @@ public class Player {
 
   public static RPiCamera piCamera;
   public static BufferedImage image;
+  public static BufferedImage referenceImage;
   public static char[][] board = new char[19][19];
   public static char[][] temp = new char[19][19];
+
+  public static int[] modX = {-1, +1, 0, 0};
+  public static int[] modY = {0, 0, -1, +1};
 
   public Player() {
 
@@ -27,26 +31,7 @@ public class Player {
   public static void main(String args[]) {
 
     initBoard();
-    printBoardToConsole();
-    Random rand = new Random();
-    char colToPlay = 'B';
-    int x = rand.nextInt(19);
-    int y = rand.nextInt(19);
-    for(int t = 0; t < 300; t++) {
-      while(board[y][x] != 'x') {
-        x = rand.nextInt(19);
-        y = rand.nextInt(19);
-      }
 
-      board[y][x] = colToPlay;
-      findAndRemoveCaptures(x, y, colToPlay);
-      colToPlay = oppositeColor(colToPlay);
-
-    }
-
-    printBoardToConsole();
-
-    /*
     try {
       piCamera = new RPiCamera("/home/pi/Player");
     }
@@ -57,33 +42,39 @@ public class Player {
 
     piCamera.setWidth(1640);
     piCamera.setHeight(1232);
-    piCamera.setTimeout(5);
+    piCamera.setTimeout(4000);
     piCamera.turnOffPreview();
     piCamera.setVerticalFlipOn();
     piCamera.setHorizontalFlipOn();
 
     try {
       image = piCamera.takeBufferedStill();
+      referenceImage = piCamera.takeBufferedStill();
     }
     catch(IOException | InterruptedException e) {
       e.printStackTrace();
     }
 
-    image = image.getSubimage(558, 333, 651, 700);
+    image = image.getSubimage(558, 334, 651, 700);
+    referenceImage = referenceImage.getSubimage(558, 334, 651, 700);
+
+    // Uncomment for visual of grid:
+    // -----------------------------
     drawGridOnImage();
     writeImageFile();
+    // -----------------------------
 
-    speak("Ok. Let's play");
-    */
+    // speak("Ok. Let's play");
 
   }
 
   public static void findAndRemoveCaptures(int x, int y, char col) {
-    initTemp();
-    if(x - 1 >= 0 && board[y][x-1] == oppositeColor(col) && !findLiberty(x - 1, y, col)) {
-      if(x + 1 <= 18 && board[y][x+1] == oppositeColor(col) && !findLiberty(x + 1, y, col)) {
-        if(y - 1 >= 0 && board[y-1][x] == oppositeColor(col) && !findLiberty(x, y - 1, col)) {
-          if(y + 1 <= 18 && board[y+1][x] == oppositeColor(col) && !findLiberty(x, y + 1, col)) {
+    for(int t = 0; t < 4; t++) {
+      initTemp();
+      if(x + modX[t] >= 0 && x + modX[t] <= 18 && y + modY[t] >= 0 && y + modY[t] <= 18) {
+        if(board[y + modY[t]][x + modX[t]] == oppositeColor(col)) {
+	  temp[y + modY[t]][x + modX[t]] = 'o';
+	  if(!findLiberty(x + modX[t], y + modY[t], oppositeColor(col))) {
             printBoardToConsole();
             for(int y2 = 0; y2 < 19; y2++) {
               for(int x2 = 0 ; x2 < 19; x2++) {
@@ -92,60 +83,23 @@ public class Player {
             }
             printBoardToConsole();
           }
-        }
+	}
       }
     }
   }
 
   public static boolean findLiberty(int x, int y, char col) {
-    if(x - 1 >= 0) {
-      if(temp[y][x-1] !='o') {
-        if(board[y][x-1] == 'x') {
-          return true;
-        }
-        if(board[y][x-1] == col) {
-          temp[y][x-1] = 'o';
-          if(findLiberty(x - 1, y, col)) {
+    for(int t = 0; t < 4; t++) {
+      if(x + modX[t] >= 0 && x + modX[t] <= 18 && y + modY[t] >= 0 && y + modY[t] <= 18) {
+        if(temp[y + modY[t]][x + modX[t]] !='o') {
+          if(board[y + modY[t]][x + modX[t]] == 'x') {
             return true;
           }
-        }
-      }
-    }
-    if(x + 1 <= 18) {
-      if(temp[y][x+1] !='o') {
-        if(board[y][x+1] == 'x') {
-          return true;
-        }
-        if(board[y][x+1] == col) {
-          temp[y][x+1] = 'o';
-          if(findLiberty(x + 1, y, col)) {
-            return true;
-          }
-        }
-      }
-    }
-    if(y - 1 >= 0) {
-      if(temp[y-1][x] !='o') {
-        if(board[y-1][x] == 'x') {
-          return true;
-        }
-        if(board[y-1][x] == col) {
-          temp[y-1][x] = 'o';
-          if(findLiberty(x, y - 1, col)) {
-            return true;
-          }
-        }
-      }
-    }
-    if(y + 1 <= 18) {
-      if(temp[y+1][x] !='o') {
-        if(board[y+1][x] == 'x') {
-          return true;
-        }
-        if(board[y+1][x] == col) {
-          temp[y+1][x] = 'o';
-          if(findLiberty(x, y + 1, col)) {
-            return true;
+          if(board[y + modY[t]][x + modX[t]] == col) {
+            temp[y + modY[t]][x + modX[t]] = 'o';
+            if(findLiberty(x + modX[t], y + modY[t], col)) {
+              return true;
+            }
           }
         }
       }
