@@ -271,7 +271,7 @@ public static void updateImage() {
       if(red > refRed + 5 && green > refGreen + 15 && blue > refBlue + 20) {
         white++;
       }
-      if(red < refRed - 30 && green < refGreen - 10 && blue < refBlue) {
+      if(red < refRed - 30 && green < refGreen - 5) {
         black++;
       }
     }
